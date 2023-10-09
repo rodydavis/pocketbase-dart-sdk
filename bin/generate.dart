@@ -13,5 +13,5 @@ void main(List<String> args) {
 
   // TODO: Generate precache for AOT bundle
 
-  // TODO: Generate client SDK
+  // TODO: Generate client SDK (sync logic)
 }
