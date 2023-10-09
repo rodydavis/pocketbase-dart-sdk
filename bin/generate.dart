@@ -9,6 +9,8 @@ void main(List<String> args) {
 
   // TODO: Generate triggers for relations
 
+  // TODO: Generate indexes and unique constraints
+
   // TODO: Generate precache for AOT bundle
 
   // TODO: Generate client SDK
