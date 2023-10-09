@@ -14,4 +14,6 @@ void main(List<String> args) {
   // TODO: Generate precache for AOT bundle
 
   // TODO: Generate client SDK (sync logic)
+
+  // TODO: PocketBase hooks to update CRDT fields
 }
