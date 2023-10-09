@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:http/http.dart" as http;
 import "package:http/testing.dart";
 import "package:pocketbase/pocketbase.dart";
+import "package:sqlite3/sqlite3.dart";
 import "package:test/test.dart";
 
 void main() {
@@ -24,7 +25,11 @@ void main() {
         return http.Response(jsonEncode(expectedResult), 200);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       final result = await client.backups.getFullList(
         query: {
@@ -56,7 +61,11 @@ void main() {
         return http.Response("", 204);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await client.backups.create(
         "test_name",
@@ -88,7 +97,11 @@ void main() {
         return http.Response("", 204);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await client.backups.upload(
         http.MultipartFile.fromBytes("file", []),
@@ -118,7 +131,11 @@ void main() {
         return http.Response("", 204);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await client.backups.restore(
         "@test_name",
@@ -136,7 +153,7 @@ void main() {
     });
 
     test("getDownloadUrl()", () async {
-      final client = PocketBase("/base");
+      final client = PocketBase("/base", sqlite3.openInMemory());
 
       final url = client.backups.getDownloadUrl(
         "@test_token",

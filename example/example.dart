@@ -3,9 +3,10 @@
 import "dart:async";
 
 import "package:pocketbase/pocketbase.dart";
+import "package:sqlite3/sqlite3.dart";
 
 void main() {
-  final pb = PocketBase("http://127.0.0.1:8090");
+  final pb = PocketBase("http://127.0.0.1:8090", sqlite3.openInMemory());
 
   // fetch a paginated list with "example" records
   pb.collection("example").getList(page: 1, perPage: 10).then((result) {

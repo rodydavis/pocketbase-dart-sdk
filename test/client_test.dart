@@ -5,6 +5,7 @@ import "dart:convert";
 import "package:http/http.dart" as http;
 import "package:http/testing.dart";
 import "package:pocketbase/pocketbase.dart";
+import "package:sqlite3/sqlite3.dart";
 import "package:test/test.dart";
 
 class DummyAuthStore extends AuthStore {}
@@ -12,7 +13,7 @@ class DummyAuthStore extends AuthStore {}
 void main() {
   group("PocketBase()", () {
     test("with defaults", () {
-      final client = PocketBase("https://example.com");
+      final client = PocketBase("https://example.com", sqlite3.openInMemory());
 
       expect(client.baseUrl, "https://example.com");
       expect(client.lang, "en-US");
@@ -29,6 +30,7 @@ void main() {
     test("with opt fields", () {
       final client = PocketBase(
         "https://example.com",
+        sqlite3.openInMemory(),
         lang: "test_lang",
         authStore: DummyAuthStore(),
       );
@@ -41,7 +43,7 @@ void main() {
 
   group("PocketBase.collection()", () {
     test("initializing different RecordServices", () {
-      final client = PocketBase("https://example.com/");
+      final client = PocketBase("https://example.com/", sqlite3.openInMemory());
 
       final service1 = client.collection("test1");
       final service2 = client.collection("@test2");
@@ -55,7 +57,7 @@ void main() {
 
   group("PocketBase.getFileUrl()", () {
     test("retrieve encoded record file url", () {
-      final client = PocketBase("/base/");
+      final client = PocketBase("/base/", sqlite3.openInMemory());
       final result = client.getFileUrl(
         RecordModel(id: "@r123", collectionId: "@c123"),
         "@f123.png",
@@ -73,28 +75,28 @@ void main() {
 
   group("PocketBase.buildUrl()", () {
     test("baseUrl with trailing slash", () {
-      final client = PocketBase("https://example.com/");
+      final client = PocketBase("https://example.com/", sqlite3.openInMemory());
 
       expect(client.buildUrl("test").toString(), "https://example.com/test");
       expect(client.buildUrl("/test").toString(), "https://example.com/test");
     });
 
     test("baseUrl without trailing slash", () {
-      final client = PocketBase("https://example.com");
+      final client = PocketBase("https://example.com", sqlite3.openInMemory());
 
       expect(client.buildUrl("test").toString(), "https://example.com/test");
       expect(client.buildUrl("/test").toString(), "https://example.com/test");
     });
 
     test("relative baseUrl", () {
-      final client = PocketBase("/api");
+      final client = PocketBase("/api", sqlite3.openInMemory());
 
       expect(client.buildUrl("test").toString(), "/api/test");
       expect(client.buildUrl("/test").toString(), "/api/test");
     });
 
     test("with query parameters", () {
-      final client = PocketBase("https://example.com/");
+      final client = PocketBase("https://example.com/", sqlite3.openInMemory());
 
       final url = client.buildUrl("/test", {
         "a": null,
@@ -128,6 +130,7 @@ void main() {
 
       final client = PocketBase(
         "/base",
+        sqlite3.openInMemory(),
         lang: "test_lang",
         httpClientFactory: () => mock,
       );
@@ -207,6 +210,7 @@ void main() {
 
       final client = PocketBase(
         "/base",
+        sqlite3.openInMemory(),
         lang: "test_lang",
         httpClientFactory: () => mock,
       );
@@ -246,7 +250,11 @@ void main() {
         return http.Response("", 400);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await expectLater(client.send(""), throwsA(isA<ClientException>()));
     });
@@ -264,7 +272,11 @@ void main() {
         return http.Response("", 204);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       expect(await client.send("/test"), isNull);
     });
@@ -278,7 +290,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       final result = await client.send("/test");
 
@@ -294,7 +310,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       final result = await client.send("/test");
 
@@ -310,7 +330,11 @@ void main() {
         return http.Response("", 200);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
       client.authStore.save(
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTM0NTI0NjF9.yVr-4JxMz6qUf1MIlGx8iW2ktUrQaFecjY_TMm7Bo4o",
         RecordModel(),
@@ -325,7 +349,11 @@ void main() {
         return http.Response("", 200);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
       client.authStore.save(
         // expired
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDA5OTE2NjF9.TxZjXz_Ks665Hju0FkZSGqHFCYBbgBmMGOLnIzkg9Dg",
@@ -344,7 +372,11 @@ void main() {
         return http.Response("", 200);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
       client.authStore.save(
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTM0NTI0NjF9.yVr-4JxMz6qUf1MIlGx8iW2ktUrQaFecjY_TMm7Bo4o",
         AdminModel(),
@@ -359,7 +391,11 @@ void main() {
         return http.Response("", 200);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
       client.authStore.save(
         // expired
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDA5OTE2NjF9.TxZjXz_Ks665Hju0FkZSGqHFCYBbgBmMGOLnIzkg9Dg",
@@ -375,7 +411,11 @@ void main() {
         return http.Response("", 200);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
       client.authStore.save(
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTM0NTI0NjF9.yVr-4JxMz6qUf1MIlGx8iW2ktUrQaFecjY_TMm7Bo4o",
         AdminModel(),

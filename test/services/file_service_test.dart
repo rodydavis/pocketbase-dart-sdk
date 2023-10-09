@@ -3,12 +3,13 @@ import "dart:convert";
 import "package:http/http.dart" as http;
 import "package:http/testing.dart";
 import "package:pocketbase/pocketbase.dart";
+import "package:sqlite3/sqlite3.dart";
 import "package:test/test.dart";
 
 void main() {
   group("FileService", () {
     test("blank uri on missing filename", () {
-      final client = PocketBase("/base/");
+      final client = PocketBase("/base/", sqlite3.openInMemory());
       final result = client.files.getUrl(
         RecordModel(id: "@r123", collectionId: "@c123"),
         "",
@@ -21,7 +22,7 @@ void main() {
     });
 
     test("retrieve encoded record file url", () {
-      final client = PocketBase("/base/");
+      final client = PocketBase("/base/", sqlite3.openInMemory());
       final result = client.files.getUrl(
         RecordModel(id: "@r123", collectionId: "@c123"),
         "@f123.png",
@@ -56,7 +57,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       final result = await client.files.getToken(
         query: {

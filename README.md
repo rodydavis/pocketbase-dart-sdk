@@ -19,18 +19,19 @@ Official Multi-platform Dart SDK for interacting with the [PocketBase Web API](h
 Add the library to your `dependencies`:
 
 ```sh
-dart pub add pocketbase
+dart pub add pocketbase sqlite3
 
 # or with Flutter:
-flutter pub add pocketbase
+flutter pub add pocketbase sqlite3
 ```
 
 Import it in your Dart code:
 
 ```dart
 import 'package:pocketbase/pocketbase.dart';
+import "package:sqlite3/sqlite3.dart";
 
-final pb = PocketBase('http://127.0.0.1:8090');
+final pb = PocketBase('http://127.0.0.1:8090', sqlite3.openInMemory());
 
 ...
 
@@ -70,8 +71,9 @@ Here is a simple example of uploading a single text file together with some othe
 ```dart
 import 'package:http/http.dart' as http;
 import 'package:pocketbase/pocketbase.dart';
+import "package:sqlite3/sqlite3.dart";
 
-final pb = PocketBase('http://127.0.0.1:8090');
+final pb = PocketBase('http://127.0.0.1:8090', sqlite3.openInMemory());
 
 pb.collection('example').create(
   body: {
@@ -492,12 +494,15 @@ One possible workaround for the streamed responses is to provide a 3rd party `ht
 
 ```dart
 import 'package:pocketbase/pocketbase.dart';
+import "package:sqlite3/sqlite3.dart";
+
 import 'package:fetch_client/fetch_client.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() {
   final pb = PocketBase(
     'http://127.0.0.1:8090',
+    sqlite3.openInMemory(), // use wasm for [sqlite3 on the web](https://pub.dev/packages/sqlite3#wasm-web-support)
     // load the fetch_client only for web, otherwise - fallback to the default http.Client()
     httpClientFactory: kIsWeb ? () => FetchClient(mode: RequestMode.cors) : null,
   );

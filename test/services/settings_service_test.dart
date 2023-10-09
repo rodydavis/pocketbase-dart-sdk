@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:http/http.dart" as http;
 import "package:http/testing.dart";
 import "package:pocketbase/pocketbase.dart";
+import "package:sqlite3/sqlite3.dart";
 import "package:test/test.dart";
 
 void main() {
@@ -22,7 +23,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       final result = await client.settings.getAll(
         query: {
@@ -56,7 +61,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       final result = await client.settings.update(
         query: {
@@ -96,7 +105,11 @@ void main() {
         return http.Response("", 204);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await client.settings.testS3(
         filesystem: "@demo",
@@ -132,7 +145,11 @@ void main() {
         return http.Response("", 204);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await client.settings.testEmail(
         "test@example.com",
@@ -175,7 +192,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await client.settings.generateAppleClientSecret(
         "1",

@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:convert";
 
 import "package:http/http.dart" as http;
+import "package:sqlite3/common.dart";
 
 import "auth_store.dart";
 import "client_exception.dart";
@@ -27,6 +28,8 @@ class PocketBase {
   /// Optional language code (default to `en-US`) that will be sent
   /// with the requests to the server as `Accept-Language` header.
   String lang;
+
+  CommonDatabase database;
 
   /// An instance of the local [AuthStore] service.
   late final AuthStore authStore;
@@ -67,7 +70,8 @@ class PocketBase {
   final _recordServices = <String, RecordService>{};
 
   PocketBase(
-    this.baseUrl, {
+    this.baseUrl,
+    this.database, {
     this.lang = "en-US",
     AuthStore? authStore,
     // used primarily for the unit tests

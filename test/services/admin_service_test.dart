@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:http/http.dart" as http;
 import "package:http/testing.dart";
 import "package:pocketbase/pocketbase.dart";
+import "package:sqlite3/sqlite3.dart";
 import "package:test/test.dart";
 
 import "crud_suite.dart";
@@ -22,7 +23,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       client.authStore.save(
         "test_token",
@@ -46,7 +51,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       client.authStore.save(
         "test_token",
@@ -67,7 +76,11 @@ void main() {
         return http.Response("", 200);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       client.authStore.save("test_token", AdminModel(id: "test123"));
 
@@ -81,7 +94,11 @@ void main() {
         return http.Response("", 200);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       client.authStore.save("test_token", AdminModel(id: "test456"));
 
@@ -117,7 +134,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       final result = await client.admins.authWithPassword(
         "test_email",
@@ -162,7 +183,11 @@ void main() {
         );
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       final result = await client.admins.refresh(
         query: {
@@ -204,7 +229,11 @@ void main() {
         return http.Response("", 204);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await client.admins.requestPasswordReset(
         "test_email",
@@ -242,7 +271,11 @@ void main() {
         return http.Response("", 204);
       });
 
-      final client = PocketBase("/base", httpClientFactory: () => mock);
+      final client = PocketBase(
+        "/base",
+        sqlite3.openInMemory(),
+        httpClientFactory: () => mock,
+      );
 
       await client.admins.confirmPasswordReset(
         "test_token",
