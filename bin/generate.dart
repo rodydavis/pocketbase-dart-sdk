@@ -1,4 +1,6 @@
 void main(List<String> args) {
+  // TODO: Get url of client
+  
   // TODO: Login with admin client
 
   // TODO: Get models from args (default to all collections)

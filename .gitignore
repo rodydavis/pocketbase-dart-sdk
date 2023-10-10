@@ -8,6 +8,9 @@ build/
 # Conventional directory for dart doc outputs.
 doc/
 
+# Local PocketBase instance
+pb/
+
 # Omit markdown preview files
 README.html
 CHANGELOG.html
