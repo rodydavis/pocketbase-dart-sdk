@@ -52,4 +52,77 @@ class FileService extends BaseService {
         .then(
             (data) => (data as Map<String, dynamic>? ?? {})["token"] as String);
   }
+
+  void saveFile(Uri url, List<int> bytes) {
+    // Check for existing
+    final existing = client.database.select(
+      "SELECT * FROM files WHERE url = ?",
+      [url.toString()],
+    );
+    if (existing.isNotEmpty) {
+      // Replace record
+      client.database.execute(
+        "UPDATE files SET data = ?, updated = ? WHERE url = ?",
+        [
+          bytes,
+          DateTime.now().toUtc().toIso8601String(),
+          url.toString(),
+        ],
+      );
+    } else {
+      // Insert record
+      client.database.execute(
+        "INSERT INTO files (data, url, created, updated) VALUES (?, ?, ?, ?)",
+        [
+          bytes,
+          url.toString(),
+          DateTime.now().toUtc().toIso8601String(),
+          DateTime.now().toUtc().toIso8601String(),
+        ],
+      );
+    }
+  }
+
+  List<int>? getFile(Uri url) {
+    final existing = client.database.select(
+      "SELECT * FROM files WHERE url = ?",
+      [url.toString()],
+    );
+    if (existing.isNotEmpty) {
+      return existing.first["data"] as List<int>?;
+    }
+    return null;
+  }
+
+  void deleteFile(Uri url) {
+    client.database.execute(
+      "DELETE FROM files WHERE url = ?",
+      [url.toString()],
+    );
+  }
+
+  Future<List<int>?> downloadFile(
+    Uri url, {
+    DateTime? stale,
+  }) async {
+    final existing = client.database.select(
+      "SELECT * FROM files WHERE url = ?",
+      [url.toString()],
+    );
+    if (existing.isNotEmpty) {
+      final raw = existing.first["data"] as List<int>?;
+      final updated = DateTime.parse(existing.first["updated"] as String);
+      if (raw != null && (stale == null || updated.isAfter(stale))) {
+        return raw;
+      }
+    }
+    final httpClient = client.httpClientFactory();
+    final response = await httpClient.get(url);
+    if (response.statusCode == 200) {
+      final bytes = response.bodyBytes;
+      saveFile(url, bytes);
+      return bytes;
+    }
+    return null;
+  }
 }

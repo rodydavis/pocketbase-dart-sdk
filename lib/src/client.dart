@@ -29,7 +29,11 @@ class PocketBase {
   /// with the requests to the server as `Accept-Language` header.
   String lang;
 
+  /// SQLite database used for offline storage and sync
   CommonDatabase database;
+
+  /// Simple flag to enable/disable offline mode.
+  bool offline = false;
 
   /// An instance of the local [AuthStore] service.
   late final AuthStore authStore;
@@ -88,6 +92,149 @@ class PocketBase {
     logs = LogService(this);
     health = HealthService(this);
     backups = BackupService(this);
+
+    database
+      ..execute("""CREATE TABLE IF NOT EXISTS changes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        `table` TEXT NOT NULL,
+        column TEXT NOT NULL,
+        row_id TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        user_id TEXT,
+        value TEXT
+      )""")
+      ..execute("""CREATE TABLE IF NOT EXISTS records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        row_id TEXT NOT NULL,
+        data TEXT NOT NULL,
+        collection TEXT NOT NULL,
+        deleted INTEGER,
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      )""")
+      ..execute("""CREATE TABLE IF NOT EXISTS files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data,
+        url TEXT NOT NULL,
+        created TEXT NOT NULL,
+        updated TEXT NOT NULL
+      )""");
+  }
+
+  Future<void> sync({String? user, int limit = 1000}) async {
+    final client = httpClientFactory();
+    final syncUrl = buildUrl("/api/sync");
+
+    final changes = database
+        .select("SELECT * FROM changes")
+        .toList()
+        .map((e) => {
+              "table": e["table"],
+              "column": e["column"],
+              "row_id": e["row_id"],
+              "timestamp": e["timestamp"],
+              "user_id": e["user_id"],
+              "value": e["value"],
+            })
+        .toList();
+    final oldest = changes.isEmpty
+        ? null
+        : changes.map((e) => DateTime.parse(e["timestamp"] as String)).reduce(
+              (value, element) =>
+                  value.compareTo(element) < 0 ? value : element,
+            );
+
+    // Push changes
+    final pushRes = await client.post(
+      syncUrl,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({"changes": changes}),
+    );
+    if (pushRes.statusCode != 200) {
+      throw Exception("Failed to push changes");
+    }
+    // Delete pushed changes
+    database.execute("DELETE FROM changes");
+
+    // Pull changes
+    var uri = syncUrl.toString();
+    final query = {
+      if (oldest != null)
+        "timestamp": oldest.toUtc().toLocal().toIso8601String(),
+      "compress": true,
+      "user": user,
+      "limit": limit,
+    };
+    if (query.isNotEmpty) {
+      uri += "?${query.entries.map((e) => "${e.key}=${e.value}").join("&")}";
+    }
+    final pullRes = await client.get(Uri.parse(uri));
+    if (pullRes.statusCode != 200) {
+      throw Exception("Failed to pull changes");
+    }
+    final pullData = jsonDecode(pullRes.body) as Map<String, dynamic>;
+    final pullChanges = pullData["changes"] as List<dynamic>;
+    for (final change in pullChanges) {
+      final map = change as Map<String, dynamic>;
+      _applyCrdt(map);
+    }
+  }
+
+  void _applyCrdt(Map<String, dynamic> val) {
+    final rowId = val["row_id"] as String;
+    final collection = val["table"] as String;
+    final column = val["column"] as String;
+    final value = val["value"];
+    final data = {column: value};
+
+    // Check for existing
+    final existing = database.select(
+      """
+      SELECT * FROM records
+      WHERE row_id = ?
+      AND collection = ?
+      """,
+      [rowId, collection],
+    );
+    if (existing.isNotEmpty) {
+      // Replace record
+      final raw = existing.first["data"] as String;
+      final original = jsonDecode(raw) as Map<String, dynamic>;
+      final merged = {...original, ...data};
+
+      database.execute(
+        """
+        UPDATE records
+        SET data = ?, updated = ?
+        WHERE row_id = ?
+        AND collection = ?
+        """,
+        [
+          jsonEncode(merged),
+          DateTime.now().toUtc().toIso8601String(),
+          rowId,
+          collection,
+        ],
+      );
+    } else {
+      // Insert record
+      database.execute(
+        """
+        INSERT INTO records (row_id, data, collection, deleted, created, updated)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        [
+          rowId,
+          jsonEncode(data),
+          collection,
+          0,
+          DateTime.now().toUtc().toIso8601String(),
+          DateTime.now().toUtc().toIso8601String(),
+        ],
+      );
+    }
   }
 
   /// Returns the RecordService associated to the specified collection.

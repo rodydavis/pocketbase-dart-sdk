@@ -10,7 +10,7 @@ import "../dtos/external_auth_model.dart";
 import "../dtos/record_auth.dart";
 import "../dtos/record_model.dart";
 import "../dtos/record_subscription_event.dart";
-import "base_crud_service.dart";
+import 'database_crud_service.dart';
 import "realtime_service.dart";
 
 /// The definition of a realtime record subscription callback function.
@@ -22,8 +22,9 @@ typedef OAuth2UrlCallbackFunc = void Function(Uri url);
 ///
 /// Usually shouldn't be initialized manually and instead
 /// [PocketBase.collection("COLLECTION")] should be used.
-class RecordService extends BaseCrudService<RecordModel> {
-  RecordService(PocketBase client, this._collectionIdOrName) : super(client);
+class RecordService extends DatabaseCrudService<RecordModel> {
+  RecordService(PocketBase client, this._collectionIdOrName)
+      : super(client, _collectionIdOrName);
 
   final String _collectionIdOrName;
 
